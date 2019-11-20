@@ -1,14 +1,29 @@
 dist: "xenial"
 language: cpp
+env:
+  global:
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "tCyeObdUl4Uq+QLA+nsYNgMZ/ELQHMmDFHdDlfJk5MIF5apEPeavNJeYJB7qC0GGd7Njqrd0In+tVhrY/q4H6raw0UAj1Hdh1SofQ9JZUiAvxrZlA7F8gr1UediFfPqFwL0gw0etsaxcggPfKLsc6Bts9OUDNHutyPZ8rP1JYuReetIwd5rPTgiqidl/aduuAlIjBDr/cifKVbx7qMJVJQFAwOK8eiWmfrnHRCDW5hjnTWdAdUf1hRIUahQXzjynPCwvwe96Zc6phluOD47B3Ow8TahZjy78W2EdJaDTPJd/kZU2VnXDdFEqpSeZD7BlXFi0oNFLC6v+uwOCEiwZq7uFCOEcHMl/riPRfXdWpyEOsc7j4TSBy3DEPdtpzLFpynbuh1Ml9xpr7Kc/dEqM867gYGrJ43tAXeDwtKcytWBnmIwADJEVfip0rmvtUzM2K8V9gaRJTyQf2OBT9RrzSwHwxovoxfwbJKQTojsq+PceOMT2zgE9fw1y54bE6DFmWgvFprcZq90HKJBX55c+sX6fM+APkuyqG8Zqtb97UJHoGyz0SzZavb/YmgAv5EwelcOC9bHvjj+SNUdzR/mHoybMhW7peGFgYxPsy8QxD0XbK11T3kv0teNmUumL/tmGlM6FoYhiCUSQnLFg+b9eQllrN6BMO5WX3FNqViTBrvc="
+
+# make sure that install deps still works on a fresh system
+before_install:
+  - ./install_deps.sh
+  # coverity scan before install
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
 
 addons:
   apt:
     packages:
       - cmake
-
-# make sure that install deps still works on a fresh system
-before_install:
-  - ./install_deps.sh
+  coverity_scan:
+    project:
+      name: "len0rd/a6000_ros"
+      description: "a6000 ros driver"
+    notification_email: len0rd@fastmail.co.uk
+    build_command_prepend: mkdir -p build && cd build && cmake -D BUILD_TESTS=ON --config Debug --target a6000_ros_driver -- -j 6 ../
+    build_command: make
+    branch_pattern: master
 
 script:
   - ./test_build.sh
